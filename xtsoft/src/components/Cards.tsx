@@ -3,8 +3,6 @@ import { TouchableOpacity, TouchableOpacityProps } from "react-native";
 
 import { ChevronRight} from "lucide-react-native"
 
-import image2 from "@assets/2.png";
-
 import { api } from "@services/api";
 
 import { ItemDTO } from "../dtos/ItemDTO";

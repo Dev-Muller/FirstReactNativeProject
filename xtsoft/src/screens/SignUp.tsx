@@ -96,27 +96,6 @@ export function SignUp() {
         ),
       });
     }
-
-    // try {
-    //   const requestData = { "name": name, "email": email,"password": password };
-    //   console.log("Enviando dados:", { name, email, password });
-    //   const response = await fetch('http://192.168.56.1:3333/users', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Accept': 'application/json',
-    //       'Content-Type': 'application/json'
-    //     },
-    //     body: JSON.stringify(requestData)
-    //   });
-
-    //   console.log(response);
-    //   if (response.ok) {
-    //     const data = await response.json();
-    //     console.log('Usuário cadastrado:', data);
-    //   }
-    // } catch (error) {
-    //   console.log('Erro na requisição:', error);
-    // }
   }
 
   return (

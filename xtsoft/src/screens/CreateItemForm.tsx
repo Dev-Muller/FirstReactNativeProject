@@ -6,6 +6,7 @@ import {
   useToast,
   Toast,
 } from "@gluestack-ui/themed";
+import { ArrowLeft } from "lucide-react-native";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
@@ -18,25 +19,37 @@ import { ToastMessage } from "@components/ToastMessage";
 import { Input } from "@components/input";
 import { Button } from "@components/Button";
 import { TouchableOpacity } from "react-native";
+import { AppError } from "@utils/AppError";
+import { getAddressLocation } from "@utils/getAddress";
+import { useLocation } from "@hooks/useLocation";
+
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { AppNavigatorRoutesProps } from "@routes/app.routes";
+import { Icon } from "@gluestack-ui/themed";
+import { ItemPhoto } from "@components/ItemPhoto";
+import React from "react";
 
 type ItemFormDataProps = {
   name: string;
-  serie: string;
-  repeticoes: string;
+  series: string;
+  repetitions: string;
   group: string;
   image?: string;
+  location?: string;
 };
 
 const ItemSchema = yup.object({
   name: yup.string().required("Name is required"),
-  serie: yup.string().required("Serie is required"),
-  repeticoes: yup.string().required("Repeticoes is required"),
+  series: yup.string().required("Serie is required"),
+  repetitions: yup.string().required("Repeticoes is required"),
   group: yup.string().required("Group is required"),
 });
 
 export function CreateItemForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [itemName, setItemName] = useState("");
+  const { getLocation, location, error } = useLocation();
+  const navigation = useNavigation<AppNavigatorRoutesProps>();
 
   const toast = useToast();
   const {
@@ -47,6 +60,49 @@ export function CreateItemForm() {
     defaultValues: { name: itemName },
     resolver: yupResolver(ItemSchema as any),
   });
+
+  function handleGoBack() {
+    navigation.goBack();
+  }
+
+  const handleGetLocation = async (onChange: (value: string) => void) => {
+    try {
+      // Obtém a localização
+      await getLocation();
+
+      if (!location) {
+        throw new Error("Não foi possível obter a localização");
+      }
+
+      // Obtém o endereço baseado na localização
+      const address = await getAddressLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        altitude: location.coords.altitude || null,
+        accuracy: location.coords.accuracy || null,
+        altitudeAccuracy: location.coords.altitudeAccuracy || null,
+        heading: location.coords.heading || null,
+        speed: location.coords.speed || null,
+      });
+
+      if (address) {
+        onChange(address);
+      } else {
+        throw new Error("Address not found");
+      }
+    } catch (error) {
+      console.error("Error getting location:", error);
+
+      toast.show({
+        placement: "top",
+        render: () => (
+          <Toast action="error" variant="outline" backgroundColor="$red500">
+            <ToastTitle color="white">{"Error getting location"}</ToastTitle>
+          </Toast>
+        ),
+      });
+    }
+  };
 
   async function handleSelectImage(data: any) {
     try {
@@ -119,34 +175,57 @@ export function CreateItemForm() {
     }
   }
 
-  // async function handleItemUpdate(data: ItemFormDataProps) {
-  //   try {
-  //     setIsLoading(true);
+  async function handleItemCreate(data: ItemFormDataProps) {
+    try {
+      setIsLoading(true);
+      await api.post("/item/create", data);
 
-  //     await api.post("/item/:{id}", data);
+      navigation.navigate("home");
 
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.show({
-  //       placement: "top",
-  //       render: ({ id }) => (
-  //         <ToastMessage
-  //           id={id}
-  //           description="An error occurred while updating the item"
-  //           title="error"
-  //           action="error"
-  //           onClose={() => toast.close(id)}
-  //         />
-  //       ),
-  //     });
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // }
+      toast.show({
+        placement: "top",
+        render: () => (
+          <Toast action="success" variant="outline" backgroundColor="$green500">
+            <ToastTitle color="white">Item Created!</ToastTitle>
+          </Toast>
+        ),
+      });
+    } catch (error) {
+      const isAppError = error instanceof AppError;
+      const message = isAppError ? error.message : "Error creating item";
+
+      toast.show({
+        placement: "top",
+        render: () => (
+          <Toast action="error" variant="outline" backgroundColor="$red500">
+            <ToastTitle color="white">{message}</ToastTitle>
+          </Toast>
+        ),
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   return (
     <VStack>
       <ScrollView contentContainerStyle={{ paddingBottom: 36 }}>
+        <VStack px="$8" bg="$trueGray600" pt="$12" pb="$4">
+          <TouchableOpacity onPress={handleGoBack}>
+            <Icon as={ArrowLeft} color="$green500" size="xl" />
+          </TouchableOpacity>
+        </VStack>
+
+        {/* <ItemPhoto
+          source={
+            data.thumb
+              ? { uri: `${api.defaults.baseURL}/avatar/${data.thumb}` }
+              : defaultUserPhotoImg
+          }
+          alt="user photo"
+          size="xl"
+        /> */}
+
         <Center mt="$6" px="$10">
           <Text
             fontSize="$lg"
@@ -173,10 +252,10 @@ export function CreateItemForm() {
             />
             <Controller
               control={control}
-              name="serie"
+              name="series"
               render={({ field: { onChange, value } }) => (
                 <Input
-                  placeholder="serie"
+                  placeholder="series"
                   value={value}
                   onChangeText={onChange}
                   bg="$trueGray600"
@@ -186,7 +265,7 @@ export function CreateItemForm() {
 
             <Controller
               control={control}
-              name="repeticoes"
+              name="repetitions"
               render={({ field: { onChange, value } }) => (
                 <Input
                   placeholder="repeticoes"
@@ -207,6 +286,29 @@ export function CreateItemForm() {
                   onChangeText={onChange}
                   bg="$trueGray600"
                 />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="location"
+              render={({ field: { onChange, value } }) => (
+                <VStack w="$full" alignItems="center" gap="$2">
+                  <Input
+                    placeholder="Location"
+                    value={value}
+                    onChangeText={onChange}
+                    w="$full"
+                    bg="$trueGray600"
+                  />
+                  <Button
+                    title="Get Location"
+                    onPress={() => handleGetLocation(onChange)}
+                    size="md"
+                    variant="outline"
+                    mr={2}
+                  />
+                </VStack>
               )}
             />
           </Center>
@@ -231,7 +333,7 @@ export function CreateItemForm() {
 
           <Button
             title="Create Item"
-            // onPress={handleSubmit(handleItemUpdate)}
+            onPress={handleSubmit(handleItemCreate)}
           />
         </Center>
       </ScrollView>
