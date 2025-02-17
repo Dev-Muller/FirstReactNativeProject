@@ -1,14 +1,18 @@
-const knex = require("../database/connection");
+const { PrismaClient } = require('@prisma/client');
 const { compare } = require("bcryptjs");
 const AppError = require("../utils/AppError");
 const GenerateRefreshToken = require("../providers/GenerateRefreshToken");
 const GenerateToken = require("../providers/GenerateToken");
 
+const prisma = new PrismaClient();
+
 class SessionsController {
   async create(request, response) {
     const { email, password } = request.body;
 
-    const user = await knex("users").where({ email: email.toLowerCase() }).first();
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    });
 
     if (!user) {
       throw new AppError("E-mail e/ou senha incorreta.", 404);
@@ -19,10 +23,10 @@ class SessionsController {
     if (!passwordMatched) {
       throw new AppError("E-mail e/ou senha incorreta.", 404);
     }
-
+    
     const generateTokenProvider = new GenerateToken();
     const token = await generateTokenProvider.execute(user.id);
-
+    
     const generateRefreshToken = new GenerateRefreshToken();
     const refresh_token = await generateRefreshToken.execute(user.id);
 

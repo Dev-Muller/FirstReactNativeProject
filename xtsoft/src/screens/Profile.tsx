@@ -13,7 +13,7 @@ import {
 } from "@gluestack-ui/themed";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
-import { useState } from "react";
+import React, { useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
 import { Controller, useForm } from "react-hook-form";
 import { useAuth } from "@hooks/useAuth";
@@ -190,7 +190,8 @@ export function Profile() {
       setIsLoading(false);
     }
   }
-
+  console.log("TO ERRADO MEU MANO");
+  
   return (
     <VStack flex={1}>
       <ScreenHeader title="Profile" />

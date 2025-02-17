@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import "@/global.css";
 import { GluestackUIProvider, StyledProvider } from "@gluestack-ui/themed";
 import { StatusBar } from "expo-status-bar";

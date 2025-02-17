@@ -26,7 +26,7 @@ import { useLocation } from "@hooks/useLocation";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { AppNavigatorRoutesProps } from "@routes/app.routes";
 import { Icon } from "@gluestack-ui/themed";
-import { ItemPhoto } from "@components/ItemPhoto";
+// import { ItemPhoto } from "@components/ItemPhoto";
 import React from "react";
 
 type ItemFormDataProps = {
@@ -67,29 +67,20 @@ export function CreateItemForm() {
 
   const handleGetLocation = async (onChange: (value: string) => void) => {
     try {
-      // Obtém a localização
-      await getLocation();
-
-      if (!location) {
+      const locationResponse = await getLocation();
+      if (!locationResponse) {
         throw new Error("Não foi possível obter a localização");
       }
-
-      // Obtém o endereço baseado na localização
       const address = await getAddressLocation({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        altitude: location.coords.altitude || null,
-        accuracy: location.coords.accuracy || null,
-        altitudeAccuracy: location.coords.altitudeAccuracy || null,
-        heading: location.coords.heading || null,
-        speed: location.coords.speed || null,
+        latitude: locationResponse?.coords.latitude,
+        longitude: locationResponse?.coords.longitude,
+        altitude: locationResponse.coords.altitude,
+        accuracy: locationResponse.coords.accuracy,
+        altitudeAccuracy: locationResponse.coords.altitudeAccuracy,
+        heading: locationResponse.coords.heading,
+        speed: locationResponse.coords.speed,
       });
-
-      if (address) {
-        onChange(address);
-      } else {
-        throw new Error("Address not found");
-      }
+      onChange(address);
     } catch (error) {
       console.error("Error getting location:", error);
 

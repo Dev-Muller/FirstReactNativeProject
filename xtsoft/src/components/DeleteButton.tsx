@@ -4,6 +4,7 @@ import {
   ButtonGroup,
 } from "@gluestack-ui/themed";
 import { ComponentProps } from "react";
+import React from "react";
 
 type Props = ComponentProps<typeof GluestackButton> & {
   title: string;

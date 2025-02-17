@@ -1,6 +1,7 @@
 const knex = require("../database/connection");
 const { hash, compare } = require("bcryptjs");
 const AppError = require("../utils/AppError");
+const prisma = require('../database/prisma');
 
 class UsersController {
   async create(request, response) {
@@ -10,7 +11,9 @@ class UsersController {
       throw new AppError("Informe todos os campos (nome, email e senha).");
     }
 
-    const checkUserExists = await knex("users").where({ email }).first();
+    const checkUserExists = await prisma.user.findUnique({
+      where: { email }
+    });
 
     if (checkUserExists) {
       throw new AppError("Este e-mail já está em uso.");
@@ -18,20 +21,24 @@ class UsersController {
 
     const hashedPassword = await hash(password, 8);
 
-    const endResponse = await knex("users").insert({
-      name,
-      email,
-      password: hashedPassword
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword
+      }
     });
 
-    return response.status(201).json(endResponse);
+    return response.status(201).json(newUser);
   }
 
   async update(request, response) {
     const { name, password, oldPassword } = request.body;
     const user_id = 4;
 
-    const user = await knex("users").where({ id: user_id }).first();
+    const user = await prisma.user.findUnique({
+      where: { id: user_id }
+    });
 
     if (!user) {
       throw new AppError("Usuário não encontrado", 404);
@@ -44,7 +51,6 @@ class UsersController {
         "Você precisa informar a senha antiga para definir a nova senha.",
       );
     }
-
 
     if (!password && oldPassword) {
       throw new AppError(
@@ -62,7 +68,10 @@ class UsersController {
       user.password = await hash(password, 8);
     }
 
-    await knex("users").where({ id: user_id }).update(user);
+    await prisma.user.update({
+      where: { id: user_id },
+      data: user
+    });
 
     return response.json();
   }

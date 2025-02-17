@@ -1,3 +1,4 @@
+import * as React from "react";
 import {
   createBottomTabNavigator,
   BottomTabNavigationProp,
@@ -5,7 +6,6 @@ import {
 import { gluestackUIConfig } from "../../config/gluestack-ui.config";
 
 import HomeSvg from "@assets/home.svg";
-import ListSvg from "@assets/list.svg";
 import ProfileSvg from "@assets/profile.svg";
 
 import { Home } from "../screens/Home";
@@ -29,6 +29,7 @@ const { Navigator, Screen } = createBottomTabNavigator<AppRoutes>();
 export function AppRoutes() {
   const { tokens } = gluestackUIConfig;
   const iconSize = tokens.space["6"];
+  
   return (
     <Navigator
       screenOptions={{
@@ -47,6 +48,7 @@ export function AppRoutes() {
         },
       }}
     >
+
       <Screen
         name="home"
         component={Home}

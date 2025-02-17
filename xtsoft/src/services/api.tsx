@@ -3,7 +3,7 @@ import axios from "axios";
 import { AppError } from "@utils/AppError";
 
 const api = axios.create({
-  baseURL: 'http://192.168.56.1:3333'
+  baseURL: 'https://apitx.vercel.app/'
 });
 
 api.interceptors.response.use(response => response, error => {
