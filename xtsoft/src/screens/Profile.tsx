@@ -24,6 +24,7 @@ import { ToastTitle } from "@gluestack-ui/themed";
 
 
 import defaultUserPhotoImg from "../assets/userPhotoDefault.png";
+import axios from "axios";
 
 type ProfileFormDataProps = {
   name: string;
@@ -82,7 +83,7 @@ export function Profile() {
       if (photoSelected.canceled) {
         return;
       }
-
+      
       const photoUri = photoSelected.assets[0].uri;
 
       if (photoUri) {
@@ -104,48 +105,43 @@ export function Profile() {
             ),
           });
         }
-
-        const fileExtension = photoUri.split(".").pop();
-        const photoFile = {
-          name: `${user.name}.${fileExtension}`.toLowerCase(),
-          uri: photoUri,
-          type: `image/${fileExtension}`,
-        };
   
         const userPhotoUploadForm = new FormData();
         userPhotoUploadForm.append("avatar", {
           uri: photoUri,
-          name: photoFile.name,
-          type: photoFile.type,
-        } as any);
+          type: photoSelected.assets[0].type, // ou o tipo correto da imagem
+          name: photoSelected.assets[0].fileName, // ou o nome correto da imagem
+        } as any );
         
-        const avatarUpdatedResponse = await api.patch(
-          "/users/avatar",
-          userPhotoUploadForm,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-
-        setUserPhoto(avatarUpdatedResponse.data.avatar);
-  
-        const userUpdated = { ...user, avatar: avatarUpdatedResponse.data.avatar };
-  
-        await updateUserProfile(userUpdated);
-
-        toast.show({
-          placement: "top",
-          render: () => (
-            <Toast action="success" variant="outline" backgroundColor="$green500">
-              <ToastTitle color="white">Foto Atualizada!</ToastTitle>
-            </Toast>
-          ),
+        const avatarUpdatedResponse = await fetch(`https://apitx.vercel.app/users/avatar/${user.id}`, {
+          method: "PUT",
+          body: userPhotoUploadForm,
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "Access-Control-Allow-Origin": "*",
+          },
         });
+
+        // setUserPhoto(avatarUpdatedResponse.data.avatar);
+        console.log(avatarUpdatedResponse);
+        
+  
+        // const userUpdated = { ...user, avatar: avatarUpdatedResponse.data.avatar };
+  
+        // await updateUserProfile(userUpdated);
+
+        // toast.show({
+        //   placement: "top",
+        //   render: () => (
+        //     <Toast action="success" variant="outline" backgroundColor="$green500">
+        //       <ToastTitle color="white">Foto Atualizada!</ToastTitle>
+        //     </Toast>
+        //   ),
+        // });
       }
     } catch (error) {
-      console.error(error);      
+      console.error(error);
+      console.error("ta com erro aqui");
     }
   }
 
@@ -156,7 +152,7 @@ export function Profile() {
       const userUpdated = user;
       userUpdated.name = data.name;
 
-      await api.put("/users/profile", data);
+      await api.put(`/users/profile/${user.id}`, data);
 
       await updateUserProfile(userUpdated);
 
@@ -190,7 +186,6 @@ export function Profile() {
       setIsLoading(false);
     }
   }
-  console.log("TO ERRADO MEU MANO");
   
   return (
     <VStack flex={1}>
